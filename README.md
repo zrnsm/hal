@@ -1,4 +1,4 @@
 hal
 ===
 
-A Scheme interpreter in Ruby
+A Scheme interpreter in Ruby.
