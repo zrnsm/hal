@@ -1,3 +1,5 @@
+require 'pp'
+
 class Hal
   attr_accessor :globals
 
@@ -66,7 +68,18 @@ class Hal
       'let*' => lambda do |locals, bindings, body|
         bindings.each { |key, value| locals[key] = hal_eval(value, locals)}
         hal_eval(body, locals)
+      end,
+      'cond' => lambda do |locals, *args|
+         args.each do |condition, result|
+           return hal_eval(resul, locals) if hal_eval(condition, locals)
+         end
+         if args.length > 0 && args[-1][0] == 'else'
+           args[-1][1]
+         end
       end
+
+      # (cond ((> 3 2) 'greater)
+      #       ((< 3 2) 'less)) 
 
       # cond
       # letrec
@@ -177,6 +190,30 @@ class Hal
     s.instance_of?(TrueClass) or s.instance_of?(FalseClass)
   end
 
+  def parse_s(s)
+    pp s
+    if s[0] == '('
+      len = s.length
+      i = 0
+      subexpr = s[i]
+      opened = 1
+      i += 1
+      while i < len and opened != 0
+        if s[i] == '('
+          opened += 1
+        end
+        if s[i] == ')'
+          opened -= 1
+        end
+        subexpr += s[i]
+        i += 1
+      end
+      subexpr
+    else
+      s
+    end
+  end
+
   def parse(s)
     len = s.length
     if s[0] == '(' and s[len - 1] == ')'
@@ -185,30 +222,30 @@ class Hal
       len = s.length
       i = 0
       while i < len
-        ch = s[i]
-        if ch == '('
-          subexpr = ch
-          # scan out to match closing paren and recurse
+        if s[i] == '('
+          subexpr = s[i]
           opened = 1
           i += 1
           while i < len and opened != 0
-            ch = s[i]
-            if ch == '('
+            if s[i] == '('
               opened += 1
             end
-            if ch == ')'
+            if s[i] == ')'
               opened -= 1
             end
-            subexpr += ch
+            subexpr += s[i]
             i += 1
           end
           item = parse(subexpr)
+        elsif s[i] == "'"
+          quoted = parse_s(s[(i+1)..-1])
+          item = parse "(quote #{quoted})"
+          i += quoted.length
         else
           item = ''
-          while ch != ' ' and i < len
-            item += ch
+          while s[i] != ' ' and i < len
+            item += s[i]
             i += 1
-            ch = s[i]
           end
         end
         result << item unless item == ''
@@ -216,7 +253,11 @@ class Hal
       end
       result
     else
-      s
+      if s[0] == "'"
+        parse "(quote #{parse_s(s[1..-1])})"
+      else
+        s
+      end
     end
   end
 end
