@@ -187,7 +187,7 @@ class Hal
   end
 
   def boolean?(s)
-    s.instance_of?(TrueClass) or s.instance_of?(FalseClass)
+    s.instance_of?(TrueClass) || s.instance_of?(FalseClass)
   end
 
   def parse_s(s)
@@ -198,7 +198,7 @@ class Hal
       subexpr = s[i]
       opened = 1
       i += 1
-      while i < len and opened != 0
+      while i < len && opened != 0
         if s[i] == '('
           opened += 1
         end
@@ -216,7 +216,7 @@ class Hal
 
   def parse(s)
     len = s.length
-    if s[0] == '(' and s[len - 1] == ')'
+    if s[0] == '(' && s[len - 1] == ')'
       result = []
       s = s[1...len-1]
       len = s.length
@@ -226,7 +226,7 @@ class Hal
           subexpr = s[i]
           opened = 1
           i += 1
-          while i < len and opened != 0
+          while i < len && opened != 0
             if s[i] == '('
               opened += 1
             end
@@ -243,7 +243,7 @@ class Hal
           i += quoted.length
         else
           item = ''
-          while s[i] != ' ' and i < len
+          while s[i] != ' ' && i < len
             item += s[i]
             i += 1
           end
