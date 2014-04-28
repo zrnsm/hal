@@ -1,5 +1,13 @@
 require 'pp'
 
+class HalError
+  attr_accessor :message
+  
+  def initialize(message)
+	@message = message
+  end
+end
+
 class Hal
   attr_accessor :globals
 
@@ -111,6 +119,14 @@ class Hal
   def null? blub
     blub == []
   end
+  
+  def value blub, locals
+	if locals[blub]
+		locals[blub]
+	else
+		@globals[blub]
+	end
+  end
 
   def hal_eval blub, locals
     if list? blub
@@ -129,11 +145,11 @@ class Hal
       elsif string?(blub)
         blub[1..-2]
       else
-        if locals[blub]
-          locals[blub]
-        else
-          @globals[blub]
-        end
+        result = value blub, locals
+		if result.nil?
+			return HalError.new "#{blub} is undefined"
+		end
+		result
       end
     end
   end
@@ -154,6 +170,8 @@ class Hal
       end
     elsif string?(blub)
       '"' + blub + '"'
+	elsif blub.is_a?(HalError)
+	  blub.message
     else
       blub
     end
@@ -162,7 +180,10 @@ class Hal
   def repl
     while true
       prompt
-      puts repr(hal_eval(parse(gets.chomp), {}))
+	  expression = gets.chomp
+	  unless expression.empty?
+		puts repr(hal_eval(parse(expression), {}))
+	  end
     end
   end
 
